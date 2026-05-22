@@ -5,10 +5,17 @@ const http = require('http');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
         headless: true,
-        protocolTimeout: 60000,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+        ]
     }
 });
 
@@ -16,14 +23,14 @@ let qrImageUrl = '';
 
 client.on('qr', async qr => {
     qrImageUrl = await qrcode.toDataURL(qr);
-    console.log('✅ QR ready! Open http://localhost:3000 in your browser to scan');
+    console.log('✅ QR ready!');
 });
 
 client.on('ready', () => console.log('✅ Bot is ready!'));
 
 client.on('disconnected', (reason) => {
     console.log('❌ Bot disconnected:', reason);
-    client.initialize(); // auto reconnect
+    client.initialize();
 });
 
 client.on('message', async msg => {
@@ -144,9 +151,10 @@ _"Your Growth, Our Mission"_ 💼`);
     }
 });
 
+const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`<img src="${qrImageUrl}" style="width:150px;height:150px"/>`);
-}).listen(3000);
+}).listen(PORT);
 
 client.initialize();
